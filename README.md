@@ -45,6 +45,8 @@ print(program)
 - `aria/`: Core source code.
 	- `logic/mcts_solver.py`: The new Reasoning Engine.
 	- `logic/synthesizer.py`: Neuro-Symbolic Bridge.
+- `tests/`: Verification scripts and unit tests.
+	- `solve_complex_mcts.py`: Proof of "Reasoning" capability.
 - `README.md`: Project documentation.
 - **Excluded**: `__pycache__`, system logs, large temporary datasets, and build artifacts are excluded via `.gitignore` to keep the repository clean.
 
