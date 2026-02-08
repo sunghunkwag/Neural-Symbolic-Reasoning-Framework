@@ -1,0 +1,94 @@
+<<<<<<< SEARCH
+        # Statistics
+        self.goals_generated = 0
+        self.step_count = 0
+
+    def step(
+        self,
+        latent_state: torch.Tensor,
+        novelty_score: float,
+        episode_failed: bool,
+        reward: float
+    ) -> Optional[Goal]:
+        """
+        Process current state and potentially generate a goal.
+        Returns Goal if generated, None otherwise.
+        """
+        self.step_count += 1
+=======
+        # Statistics
+        self.goals_generated = 0
+        self.step_count = 0
+
+        # Throttling
+        self.last_generated_time: Dict[GoalChannel, int] = {}
+
+    def step(
+        self,
+        latent_state: torch.Tensor,
+        novelty_score: float,
+        episode_failed: bool,
+        reward: float,
+        active_goal_count: int = 0
+    ) -> Optional[Goal]:
+        """
+        Process current state and potentially generate a goal.
+        Returns Goal if generated, None otherwise.
+        """
+        # Backpressure: Prevent goal explosion
+        if active_goal_count >= 5:
+            # Still update internal stats but don't generate new goals
+            self._update_novelty(novelty_score)
+            return None
+
+        self.step_count += 1
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+        # Try each channel
+        goal = self._try_compression_failure(latent_state, novelty_score)
+        if goal:
+            return goal
+
+        goal = self._try_failure_pattern()
+        if goal:
+            return goal
+
+        goal = self._try_anomaly_discovery(latent_state)
+        if goal:
+            return goal
+
+        return None
+=======
+        # Try each channel (with throttling)
+
+        # Channel 1
+        if self._check_cooldown(GoalChannel.COMPRESSION_FAILURE):
+            goal = self._try_compression_failure(latent_state, novelty_score)
+            if goal:
+                self._update_cooldown(GoalChannel.COMPRESSION_FAILURE)
+                return goal
+
+        # Channel 2
+        if self._check_cooldown(GoalChannel.FAILURE_PATTERN):
+            goal = self._try_failure_pattern()
+            if goal:
+                self._update_cooldown(GoalChannel.FAILURE_PATTERN)
+                return goal
+
+        # Channel 3
+        if self._check_cooldown(GoalChannel.ANOMALY_DISCOVERY):
+            goal = self._try_anomaly_discovery(latent_state)
+            if goal:
+                self._update_cooldown(GoalChannel.ANOMALY_DISCOVERY)
+                return goal
+
+        return None
+
+    def _check_cooldown(self, channel: GoalChannel, cooldown_steps: int = 20) -> bool:
+        """Check if enough time has passed since last goal of this type."""
+        last = self.last_generated_time.get(channel, -1000)
+        return (self.step_count - last) > cooldown_steps
+
+    def _update_cooldown(self, channel: GoalChannel):
+        self.last_generated_time[channel] = self.step_count
+>>>>>>> REPLACE

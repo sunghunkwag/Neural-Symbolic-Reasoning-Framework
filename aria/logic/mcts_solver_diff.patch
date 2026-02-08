@@ -1,0 +1,52 @@
+<<<<<<< SEARCH
+        # 3. Randomly fill holes
+        depth = 0
+        while holes:
+            h = holes.pop(0)
+            # Fill h
+            # Pick random action
+            possibles = self._get_possible_actions(h.return_type, context_types, depth)
+            if not possibles:
+                print(f"DEBUG: No actions for type {h.return_type} at depth {depth}")
+                print(f"DEBUG: Context: {context_types}")
+            action = random.choice(possibles)
+
+            # Apply
+            # Replaces 'h' in 'curr_prog'.
+=======
+        # 3. Randomly fill holes
+        depth = 0
+        while holes:
+            h = holes.pop(0)
+            # Fill h
+            # Pick random action
+            possibles = self._get_possible_actions(h.return_type, context_types, depth)
+            if not possibles:
+                # Fallback: Try to use a terminal if available regardless of type matching strictness?
+                # Or just abort this rollout
+                # self.logger.warning(f"Simulate: No actions for type {h.return_type} at depth {depth}")
+                return 0.0, curr_prog # Return minimal score
+
+            try:
+                action = random.choice(possibles)
+            except IndexError:
+                 return 0.0, curr_prog
+
+            # Apply
+            # Replaces 'h' in 'curr_prog'.
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+        # 4. Evaluate
+        score = self._evaluate(curr_prog, examples, context_types)
+        return score, curr_prog
+=======
+        # 4. Evaluate
+        try:
+            score = self._evaluate(curr_prog, examples, context_types)
+        except Exception as e:
+            # Log execution failure
+            # print(f"Execution Error: {e}")
+            score = 0.0
+
+        return score, curr_prog
+>>>>>>> REPLACE

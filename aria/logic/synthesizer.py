@@ -16,6 +16,8 @@ from aria.types import Grid
 from .dsl import TYPED_PRIMITIVES
 from .primitives import filter_list, is_even, is_positive, logical_and
 from .mcts_solver import MCTSSolver
+from .genetic_typed import TypedNode, PrimitiveNode, VariableNode, TypedGeneticEngine
+import copy
 
 class LogicSynthesizer:
     """
@@ -169,17 +171,37 @@ class LogicSynthesizer:
             source = f.read()
             tree = ast.parse(source)
 
-        # Inject Imports if missing
-        import_stmt = "from aria.logic.dsl import filter_list, is_even, is_positive, logical_and, logical_or"
-        if "from aria.logic.dsl" not in source:
+        # Inject Imports if missing - comprehensive list
+        # We use a wildcard import to ensure all primitives are available for the evolved code
+        import_stmt = "from aria.logic.dsl import *"
+        has_import = False
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom) and node.module == 'aria.logic.dsl':
+                has_import = True
+                break
+
+        if not has_import:
              import_node = ast.parse(import_stmt).body[0]
              tree.body.insert(0, import_node)
+
+        # Verify evolved code syntax
+        try:
+            evolved_ast = ast.parse(evolved_code)
+        except SyntaxError as e:
+            self.logger.error(f"RSI: Evolved code has syntax error: {e}")
+            return False
 
         class CodeReplaced(ast.NodeTransformer):
             def visit_FunctionDef(self, node):
                 if node.name == function_name:
                     # Replace the entire body with: return <evolved_code>
-                    new_body = [ast.Return(value=ast.parse(evolved_code).body[0].value)]
+                    # We wrap in a return statement
+                    if isinstance(evolved_ast.body[0], ast.Expr):
+                        ret_val = evolved_ast.body[0].value
+                    else:
+                        ret_val = evolved_ast.body[0] # Fallback
+
+                    new_body = [ast.Return(value=ret_val)]
                     node.body = new_body
                     print(f"RSI: Function '{function_name}' body replaced in AST.")
                 return node
@@ -200,23 +222,52 @@ class LogicSynthesizer:
             return False
 
     def optimize_file(self, file_path: str, target_function: str = None):
-        """Legacy RSI Micro-Experiment (Phase 18)."""
-        import time
-        import importlib.util
-        import sys
-        import random
-        
+        """Phase 20: Parameter Optimization via AST."""
         print(f"RSI: Optimizing {file_path} constants...")
-        # (Implementation omitted for brevity or kept if still needed)
-        # For Phase 20, we prioritize evolve_algorithm.
-        # But let's keep a simplified version of parameter optimization for legacy support.
+
         with open(file_path, 'r') as f:
-            content = f.read()
+            source = f.read()
         
-        if "sleep(1.0)" in content:
-            new_content = content.replace("sleep(1.0)", "sleep(0.000)")
+        try:
+            tree = ast.parse(source)
+        except SyntaxError as e:
+            self.logger.error(f"RSI: Syntax error in {file_path}: {e}")
+            return False
+
+        class SleepOptimizer(ast.NodeTransformer):
+            def visit_Call(self, node):
+                # Detect sleep(1.0) or time.sleep(1.0)
+                is_sleep = False
+                if isinstance(node.func, ast.Name) and node.func.id == 'sleep':
+                    is_sleep = True
+                elif isinstance(node.func, ast.Attribute) and node.func.attr == 'sleep':
+                    is_sleep = True
+
+                if is_sleep and node.args:
+                    arg = node.args[0]
+                    if isinstance(arg, ast.Constant) and (arg.value == 1.0 or arg.value == 1):
+                        # Replace with 0.001
+                        print("RSI: Found sleep(1.0), optimizing to sleep(0.001)")
+                        return ast.Call(
+                            func=node.func,
+                            args=[ast.Constant(value=0.001)],
+                            keywords=node.keywords
+                        )
+                return node
+
+        optimizer = SleepOptimizer()
+        new_tree = optimizer.visit(tree)
+        ast.fix_missing_locations(new_tree)
+
+        try:
+            # Verify syntax
+            new_source = ast.unparse(new_tree)
+            ast.parse(new_source) # Double check
+
             with open(file_path, 'w') as f:
-                f.write(new_content)
-            print("RSI: Patch Applied (Constant).")
+                f.write(new_source)
+            print("RSI: Patch Applied (AST Safe).")
             return True
-        return False
+        except Exception as e:
+            print(f"RSI: Failed to apply AST patch: {e}")
+            return False

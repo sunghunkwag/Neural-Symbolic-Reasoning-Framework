@@ -1,0 +1,17 @@
+<<<<<<< SEARCH
+            # 3. Simulation
+            score, completed_program = self._simulate(node, examples, context_types)
+
+            # Check best
+            if score > best_score:
+=======
+            # 3. Simulation
+            score, completed_program = self._simulate(node, examples, context_types)
+
+            # Thought Stream Logger (Traceable Consciousness)
+            if i < 5:
+                print(f"[MCTS-TRACE] Iter {i}: Score={score:.4f} | Prog: {completed_program}")
+
+            # Check best
+            if score > best_score:
+>>>>>>> REPLACE

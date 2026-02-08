@@ -105,10 +105,11 @@ def run_aria(
         # Logging
         if (episode + 1) % 10 == 0:
             metrics = aria.get_metrics()
+            active_goals_count = len(aria.goal_stack) + (1 if aria.current_goal else 0)
             logger.info(
                 f"Episode {episode + 1}/{episodes} | "
                 f"Reward: {episode_reward:.1f} | "
-                f"Goals: {metrics['goals_generated']} gen, {metrics['goals_rejected']} rej | "
+                f"Goals: {metrics['goals_generated']} gen, {metrics['goals_rejected']} rej, {active_goals_count} active | "
                 f"Beliefs Rev: {metrics['beliefs_revised']} | "
                 f"Self-Mod: {metrics['self_mod_proposals']} prop, {metrics['self_mod_commits']} commit"
             )
