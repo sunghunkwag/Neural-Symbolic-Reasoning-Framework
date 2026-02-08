@@ -1,0 +1,27 @@
+{
+  "metrics": {
+    "episode": 2,
+    "step": 402,
+    "goals_generated": 304,
+    "goals_rejected": 0,
+    "goals_completed": 0,
+    "beliefs_revised": 219,
+    "self_mod_proposals": 0,
+    "self_mod_commits": 0,
+    "baseline_performance": 0.0,
+    "current_performance": 0.0,
+    "improvement": 0,
+    "world_model_train_steps": 401,
+    "policy_train_steps": 3
+  },
+  "criteria": {
+    "goals_generated_3": true,
+    "goals_rejected_10": false,
+    "beliefs_revised_1": true,
+    "self_mod_proposals_2": false,
+    "self_mod_commits_1": false,
+    "improvement_positive": false,
+    "all_passed": false
+  },
+  "elapsed_seconds": 158.68166947364807
+}
