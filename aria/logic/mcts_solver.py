@@ -89,6 +89,10 @@ class MCTSSolver:
             # 3. Simulation
             score, completed_program = self._simulate(node, examples, context_types)
             
+            # Thought Stream Logger (Traceable Consciousness)
+            if i < 5:
+                print(f"[MCTS-TRACE] Iter {i}: Score={score:.4f} | Prog: {completed_program}")
+
             # Check best
             if score > best_score:
                 best_score = score
@@ -206,6 +210,10 @@ class MCTSSolver:
             # 3. Simulation
             score, completed_program = self._simulate(node, examples, context_types)
             
+            # Thought Stream Logger (Traceable Consciousness)
+            if i < 5:
+                print(f"[MCTS-TRACE] Iter {i}: Score={score:.4f} | Prog: {completed_program}")
+
             # Check best
             if score > best_score:
                 best_score = score
@@ -325,10 +333,16 @@ class MCTSSolver:
             # Pick random action
             possibles = self._get_possible_actions(h.return_type, context_types, depth)
             if not possibles:
-                print(f"DEBUG: No actions for type {h.return_type} at depth {depth}")
-                print(f"DEBUG: Context: {context_types}")
-            action = random.choice(possibles)
+                # Fallback: Try to use a terminal if available regardless of type matching strictness?
+                # Or just abort this rollout
+                # self.logger.warning(f"Simulate: No actions for type {h.return_type} at depth {depth}")
+                return 0.0, curr_prog # Return minimal score
             
+            try:
+                action = random.choice(possibles)
+            except IndexError:
+                 return 0.0, curr_prog
+
             # Apply
             # Replaces 'h' in 'curr_prog'.
             # Note: _apply_action logic needs to handle replacement in tree.
@@ -355,7 +369,13 @@ class MCTSSolver:
             if depth > 20: break # Safety
             
         # 4. Evaluate
-        score = self._evaluate(curr_prog, examples, context_types)
+        try:
+            score = self._evaluate(curr_prog, examples, context_types)
+        except Exception as e:
+            # Log execution failure
+            # print(f"Execution Error: {e}")
+            score = 0.0
+
         return score, curr_prog
 
     def _backpropagate(self, node: MCTSNode, score: float):

@@ -1,0 +1,91 @@
+<<<<<<< SEARCH
+from aria.types import Grid
+from .dsl import TYPED_PRIMITIVES
+from .primitives import filter_list, is_even, is_positive, logical_and
+from .mcts_solver import MCTSSolver
+
+class LogicSynthesizer:
+=======
+from aria.types import Grid
+from .dsl import TYPED_PRIMITIVES
+from .primitives import filter_list, is_even, is_positive, logical_and
+from .mcts_solver import MCTSSolver
+from .genetic_typed import TypedNode, PrimitiveNode, VariableNode, TypedGeneticEngine
+import copy
+
+class LogicSynthesizer:
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+    def optimize_file(self, file_path: str, target_function: str = None):
+        """Legacy RSI Micro-Experiment (Phase 18)."""
+        import time
+        import importlib.util
+        import sys
+        import random
+
+        print(f"RSI: Optimizing {file_path} constants...")
+        # (Implementation omitted for brevity or kept if still needed)
+        # For Phase 20, we prioritize evolve_algorithm.
+        # But let's keep a simplified version of parameter optimization for legacy support.
+        with open(file_path, 'r') as f:
+            content = f.read()
+
+        if "sleep(1.0)" in content:
+            new_content = content.replace("sleep(1.0)", "sleep(0.000)")
+            with open(file_path, 'w') as f:
+                f.write(new_content)
+            print("RSI: Patch Applied (Constant).")
+            return True
+        return False
+=======
+    def optimize_file(self, file_path: str, target_function: str = None):
+        """Phase 20: Parameter Optimization via AST."""
+        print(f"RSI: Optimizing {file_path} constants...")
+
+        with open(file_path, 'r') as f:
+            source = f.read()
+
+        try:
+            tree = ast.parse(source)
+        except SyntaxError as e:
+            self.logger.error(f"RSI: Syntax error in {file_path}: {e}")
+            return False
+
+        class SleepOptimizer(ast.NodeTransformer):
+            def visit_Call(self, node):
+                # Detect sleep(1.0) or time.sleep(1.0)
+                is_sleep = False
+                if isinstance(node.func, ast.Name) and node.func.id == 'sleep':
+                    is_sleep = True
+                elif isinstance(node.func, ast.Attribute) and node.func.attr == 'sleep':
+                    is_sleep = True
+
+                if is_sleep and node.args:
+                    arg = node.args[0]
+                    if isinstance(arg, ast.Constant) and (arg.value == 1.0 or arg.value == 1):
+                        # Replace with 0.001
+                        print("RSI: Found sleep(1.0), optimizing to sleep(0.001)")
+                        return ast.Call(
+                            func=node.func,
+                            args=[ast.Constant(value=0.001)],
+                            keywords=node.keywords
+                        )
+                return node
+
+        optimizer = SleepOptimizer()
+        new_tree = optimizer.visit(tree)
+        ast.fix_missing_locations(new_tree)
+
+        try:
+            # Verify syntax
+            new_source = ast.unparse(new_tree)
+            ast.parse(new_source) # Double check
+
+            with open(file_path, 'w') as f:
+                f.write(new_source)
+            print("RSI: Patch Applied (AST Safe).")
+            return True
+        except Exception as e:
+            print(f"RSI: Failed to apply AST patch: {e}")
+            return False
+>>>>>>> REPLACE

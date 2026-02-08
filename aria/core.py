@@ -110,12 +110,16 @@ class ARIACore:
         
         self.recent_novelties.append(novelty)
         
+        # Calculate active goal load
+        active_count = len(self.goal_stack) + (1 if self.current_goal else 0)
+
         # 2. GOAL GENERATION - Autonomous goal invention
         generated_goal = self.goal_generator.step(
             z_t, 
             novelty,
             episode_failed=done and reward < 0,
-            reward=reward
+            reward=reward,
+            active_goal_count=active_count
         )
         
         if generated_goal:
