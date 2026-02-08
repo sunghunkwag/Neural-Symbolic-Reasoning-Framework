@@ -41,5 +41,12 @@ program = synthesizer.solve(examples, use_mcts=True)
 print(program)
 ```
 
+## Repository Structure
+- `aria/`: Core source code.
+	- `logic/mcts_solver.py`: The new Reasoning Engine.
+	- `logic/synthesizer.py`: Neuro-Symbolic Bridge.
+- `README.md`: Project documentation.
+- **Excluded**: `__pycache__`, system logs, large temporary datasets, and build artifacts are excluded via `.gitignore` to keep the repository clean.
+
 ## Citation
 Please cite this repository if you use the Neural-Symbolic Reasoning Framework in your research.
