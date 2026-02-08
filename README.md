@@ -50,5 +50,6 @@ print(program)
 - `README.md`: Project documentation.
 - **Excluded**: `__pycache__`, system logs, large temporary datasets, and build artifacts are excluded via `.gitignore` to keep the repository clean.
 
-## Citation
-Please cite this repository if you use the Neural-Symbolic Reasoning Framework in your research.
+
+## Disclaimer
+This project is for **research and testing purposes only**. The code is provided "as is" without warranty of any kind, express or implied.
