@@ -131,6 +131,32 @@ def hconcat(left: Grid, right: Grid) -> Grid:
     d2 = np.vstack([right.data, np.zeros((h_max - right.H, right.W), dtype=right.data.dtype)]) if right.H < h_max else right.data
     return Grid(np.hstack([d1, d2]))
 
+def subgrid(grid: Grid, x: int, y: int, w: int, h: int) -> Grid:
+    """Safely crop a sub-grid from (x, y) with width w and height h."""
+    x0 = max(0, x)
+    y0 = max(0, y)
+    x1 = min(grid.W, x0 + max(0, w))
+    y1 = min(grid.H, y0 + max(0, h))
+    if x1 <= x0 or y1 <= y0:
+        return Grid(np.zeros((1, 1), dtype=grid.data.dtype))
+    return Grid(grid.data[y0:y1, x0:x1].copy())
+
+def overlay(base: Grid, top: Grid, x: int = 0, y: int = 0) -> Grid:
+    """Overlay non-zero pixels of `top` onto `base` at offset (x, y)."""
+    result = base.data.copy()
+    for ty in range(top.H):
+        by = y + ty
+        if by < 0 or by >= base.H:
+            continue
+        for tx in range(top.W):
+            bx = x + tx
+            if bx < 0 or bx >= base.W:
+                continue
+            value = top.data[ty, tx]
+            if value != 0:
+                result[by, bx] = value
+    return Grid(result)
+
 def vconcat(top: Grid, bottom: Grid) -> Grid:
     """Vertically concatenate with padding."""
     w_max = max(top.W, bottom.W)
