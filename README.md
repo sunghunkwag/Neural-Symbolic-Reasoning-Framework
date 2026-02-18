@@ -1,55 +1,61 @@
-# Neural-Symbolic Reasoning Framework for Program Synthesis
+# Neural-Symbolic Reasoning Framework
+
+> **Research Note**: This is a proof-of-concept exploring the integration of Monte Carlo Tree Search (MCTS) with domain-specific languages for program synthesis. It is not a general-purpose synthesizer.
 
 ## Abstract
-This repository implements a **Neural-Symbolic Reasoning Framework** designed to solve complex program synthesis tasks that are intractable for standard genetic algorithms. By replacing stochastic mutation with **Monte Carlo Tree Search (MCTS)** and implementing **Chain-of-Thought (CoT)** sequential reasoning, the system achieves 100% stability on benchmark tasks where purely evolutionary approaches fail.
+
+This repository explores whether **Monte Carlo Tree Search (MCTS)** can outperform standard genetic algorithms in program synthesis tasks where the search space is highly structured but sparse.
+
+The core hypothesis is that replacing stochastic mutation with lookahead search (MCTS) allows for solving tasks that require sequential logic (e.g., "Shift then Recolor"), which often trap greedy evolutionary approaches in local optima.
+
+---
 
 ## Core Architecture
 
-### 1. Deterministic Reasoning Engine (`mcts_solver.py`)
-- **Algorithm**: Monte Carlo Tree Search (MCTS) with UCB1 exploration.
-- **State Space**: Partial Abstract Syntax Trees (ASTs) with typed "Holes".
-- **Rollout Policy**: Context-aware random completion with dynamic vocabulary extraction.
-- **Value Function**: Dense reward signal combining pixel-wise accuracy (spatial) and histogram similarity (feature).
+### 1. MCTS Logic Solver (`mcts_solver.py`)
+- **Mechanism**: UCB1 exploration over a grammar of partial ASTs.
+- **Goal**: Navigate the combinatorial explosion of program synthesis more efficiently than random walk.
+- ** Limitation**: The state space grows exponentially with program length. MCTS is only effective for very short programs (< 5 DSL primitives).
 
-### 2. Sequential Chain-of-Thought
-- Breaks complex transformations into a sequence of simpler residual problems.
-- $P_{final}(x) = P_n(...P_1(x))$
-- Enabled the solution of the "Shift & Recolor" task by decomposing it into spatial translation followed by attribute modification.
+### 2. Sequential Decomposition
+- **Concept**: Attempting to break tasks into $P_{final}(x) = P_n(...P_1(x))$.
+- **Status**: Manual decomposition works for toy examples (Shift+Recolor), but automated decomposition remains unsolved.
 
-## Experimental Results
+---
 
-The framework was evaluated against a baseline Genetic Algorithm (Population: 500, Generations: 100) on the ARC-Mini benchmark.
+## Experimental Observations
 
-| Task Type | Baseline (GA) | Ours (MCTS) | Improvement |
+We compared MCTS against a baseline Genetic Algorithm (GA) on a strict subset of the ARC-Mini benchmark.
+
+| Task Type | Baseline (GA) | MCTS (Ours) | Observation |
 | :--- | :--- | :--- | :--- |
-| **Atomic (Identity)** | 100% | **100%** | Stable |
-| **Composite (Shift+Recolor)** | 0% (Stuck in Local Optima) | **100%** | **Converged** |
+| **Atomic (Identity)** | Solved | Solved | Trivial baseline. |
+| **Composite (Shift+Recolor)** | Failed (0%) | Solved (100%)* | *Only with constrained DSL. |
 
-## Usage
+**Key Failure Mode**: When the DSL is expanded to include more than ~10 primitives, MCTS performance degrades rapidly, often failing to converge within a reasonable time budget due to the branching factor.
+
+---
+
+## Usage (Experimental)
 
 ```python
 from aria.logic.synthesizer import LogicSynthesizer
 from aria.types import Grid
 
-# Initialize Hybrid Neuro-Symbolic Synthesizer
-# (Prioritizes MCTS, falls back to Genetic)
+# Initialize Synthesizer
+# Warning: High memory usage for deep search trees
 synthesizer = LogicSynthesizer()
 
-# Solve Task
+# Attempt to solve (may hang if search space is too large)
 examples = [(input_grid, output_grid)]
 program = synthesizer.solve(examples, use_mcts=True)
 print(program)
 ```
 
 ## Repository Structure
-- `aria/`: Core source code.
-	- `logic/mcts_solver.py`: The new Reasoning Engine.
-	- `logic/synthesizer.py`: Neuro-Symbolic Bridge.
-- `tests/`: Verification scripts and unit tests.
-	- `solve_complex_mcts.py`: Proof of "Reasoning" capability.
-- `README.md`: Project documentation.
-- **Excluded**: `__pycache__`, system logs, large temporary datasets, and build artifacts are excluded via `.gitignore` to keep the repository clean.
-
+- `aria/logic/mcts_solver.py`: The search implementation.
+- `aria/logic/synthesizer.py`: Integration logic.
+- `tests/`: Benchmarks on specific (cherry-picked) tasks.
 
 ## Disclaimer
-This project is for **research and testing purposes only**. The code is provided "as is" without warranty of any kind, express or implied.
+This is research code. It is brittle, unoptimized, and intended only for reproducing specific experimental results on program synthesis search methods.
